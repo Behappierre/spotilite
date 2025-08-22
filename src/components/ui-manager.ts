@@ -104,11 +104,25 @@ export class UIManager {
       const div = document.createElement("div");
       div.className = "item";
       
+      // Debug: Log the item structure for tracks
+      if (kind === "track") {
+        console.log("Track item structure:", {
+          name: item.name,
+          album: item.album,
+          albumImages: item.album?.images,
+          hasImages: !!item.images,
+          images: item.images
+        });
+      }
+      
       const imgSrc = this.getCardImage(item, kind);
       const link = (item.external_urls && item.external_urls.spotify) || "#";
+      
+      // Debug: Log the final image source
+      console.log(`${kind} "${item.name}" - Final image source:`, imgSrc);
 
       div.innerHTML = `
-        ${imgSrc ? `<img class="cover" src="${imgSrc}" alt="">` : `<div class="cover"></div>`}
+        ${imgSrc ? `<img class="cover" src="${imgSrc}" alt="">` : `<div class="cover" style="display:flex;align-items:center;justify-content:center;color:#8fa0b3;font-size:24px;">🎵</div>`}
         <div class="meta">
           <div class="row" style="justify-content:space-between;">
             <span class="pill" style="border-color:#1db95433;background:#0f1b12;color:#bfead0;">${kind}</span>
@@ -150,13 +164,30 @@ export class UIManager {
   }
 
   private getCardImage(item: any, kind: string): string {
-    if (!item.images || !item.images.length) return "";
-    
-    if (kind === "track" && item.album?.images) {
-      return item.album.images[Math.min(1, item.album.images.length - 1)].url;
+    if (kind === "track") {
+      // For tracks, get image from album
+      if (item.album?.images && item.album.images.length > 0) {
+        // Use middle-sized image (index 1) if available, otherwise first
+        const imageIndex = item.album.images.length > 1 ? 1 : 0;
+        const imageUrl = item.album.images[imageIndex].url;
+        console.log(`Track "${item.name}" - Album: "${item.album.name}", Image: ${imageUrl}`);
+        return imageUrl;
+      }
+      console.log(`Track "${item.name}" - No album images found`);
+      return "";
     }
     
-    return item.images[Math.min(1, item.images.length - 1)].url;
+    // For other types (artist, album, playlist), use their own images
+    if (item.images && item.images.length > 0) {
+      // Use middle-sized image (index 1) if available, otherwise first
+      const imageIndex = item.images.length > 1 ? 1 : 0;
+      const imageUrl = item.images[imageIndex].url;
+      console.log(`${kind.charAt(0).toUpperCase() + kind.slice(1)} "${item.name}" - Image: ${imageUrl}`);
+      return imageUrl;
+    }
+    
+    console.log(`${kind.charAt(0).toUpperCase() + kind.slice(1)} "${item.name}" - No images found`);
+    return "";
   }
 
   private getSubtitle(item: any, kind: string): string {
