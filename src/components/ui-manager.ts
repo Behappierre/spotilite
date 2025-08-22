@@ -170,6 +170,12 @@ export class UIManager {
 
   private addItems(items: any[], kind: string, blocks: HTMLElement[]): void {
     items.forEach(item => {
+      // Safety check for null/undefined items
+      if (!item || typeof item !== 'object' || !item.name) {
+        console.warn(`Skipping invalid ${kind} item:`, item);
+        return;
+      }
+
       const div = document.createElement("div");
       div.className = "item";
       
@@ -185,7 +191,7 @@ export class UIManager {
       }
       
       const imgSrc = this.getCardImage(item, kind);
-      const link = (item.external_urls && item.external_urls.spotify) || "#";
+      const link = (item?.external_urls?.spotify) || "#";
       
       // Debug: Log the final image source
       console.log(`${kind} "${item.name}" - Final image source:`, imgSrc);
@@ -290,6 +296,8 @@ export class UIManager {
   }
 
   private getSubtitle(item: any, kind: string): string {
+    if (!item) return "";
+    
     switch (kind) {
       case "track":
         return `${this.formatArtists(item.artists)} · ${item.album?.name || ""}`;
@@ -314,6 +322,9 @@ export class UIManager {
   }
 
   private escapeHtml(s: string): string {
+    if (!s || typeof s !== 'string') {
+      return '';
+    }
     return s.replace(/[&<>'"]/g, (c: string) => ({
       '&': '&amp;',
       '<': '&lt;',
