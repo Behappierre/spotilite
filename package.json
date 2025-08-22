@@ -2,7 +2,6 @@
   "name": "spotilite",
   "version": "1.0.0",
   "description": "A clean, minimal Spotify web application with full playback capabilities",
-  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
