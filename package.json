@@ -5,17 +5,17 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
-    "build:netlify": "tsc && vite build",
+    "build": "vite build",
+    "build:netlify": "vite build",
     "preview": "vite preview",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "vite": "^5.0.0"
+    "vite": "^5.0.0",
+    "typescript": "^5.9.2"
   },
   "devDependencies": {
-    "@types/node": "^20.19.11",
-    "typescript": "^5.9.2"
+    "@types/node": "^20.19.11"
   },
   "keywords": [
     "spotify",
