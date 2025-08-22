@@ -1,20 +1,32 @@
 import { defineConfig } from 'vite'
-import fs from 'fs'
-import path from 'path'
+
+// Check if we're building for production (Netlify) or development
+const isProduction = process.env.NODE_ENV === 'production' || process.env.NETLIFY === 'true'
 
 export default defineConfig({
   server: {
-    host: '127.0.0.1',
     port: 5173,
     open: true,
-    https: {
-      key: fs.readFileSync(path.resolve(__dirname, 'localhost+2-key.pem')),
-      cert: fs.readFileSync(path.resolve(__dirname, 'localhost+2.pem'))
-    }
+    // Only use HTTPS in development
+    ...(isProduction ? {} : {
+      https: true,
+      host: '127.0.0.1'
+    })
   },
   build: {
     outDir: 'dist',
-    assetsDir: 'assets',
-    sourcemap: true
-  }
+    sourcemap: false,
+    minify: 'terser',
+    rollupOptions: {
+      output: {
+        manualChunks: undefined
+      }
+    }
+  },
+  // Optimize for production builds
+  ...(isProduction && {
+    define: {
+      'process.env.NODE_ENV': '"production"'
+    }
+  })
 })

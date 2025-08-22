@@ -20,6 +20,8 @@ build/
 *.pem
 *.key
 *.crt
+*.p12
+*.pfx
 
 # IDE files
 .vscode/
@@ -52,3 +54,6 @@ coverage/
 # Temporary folders
 tmp/
 temp/
+
+# Netlify
+.netlify/
