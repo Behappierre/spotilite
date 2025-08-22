@@ -1,0 +1,39 @@
+{
+  "name": "spotilite",
+  "version": "1.0.0",
+  "description": "A clean, minimal Spotify search application with OAuth 2.0 PKCE authentication",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "serve": "npx serve . -p 8080",
+    "start": "npm run serve",
+    "certs": "node generate-certs.js"
+  },
+  "keywords": [
+    "spotify",
+    "music",
+    "search",
+    "oauth",
+    "pkce",
+    "vanilla-js",
+    "no-framework"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "vite": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/spotilite.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/spotilite/issues"
+  },
+  "homepage": "https://github.com/yourusername/spotilite#readme"
+}
