@@ -125,4 +125,65 @@ export class SpotifyApiService {
       throw error;
     }
   }
+
+  static async getPlaylistTracks(playlistId: string): Promise<SpotifyTrack[]> {
+    const token = await SpotifyAuthService.getAccessToken();
+    if (!token) throw new Error("No access token");
+
+    try {
+      const response = await this.fetchJSON<any>(
+        `https://api.spotify.com/v1/playlists/${playlistId}/tracks`,
+        token
+      );
+      
+      return response.items.map((item: any) => item.track).filter((track: any) => track !== null);
+    } catch (error) {
+      console.error('Error fetching playlist tracks:', error);
+      throw error;
+    }
+  }
+
+  static async getAlbumTracks(albumId: string): Promise<SpotifyTrack[]> {
+    const token = await SpotifyAuthService.getAccessToken();
+    if (!token) throw new Error("No access token");
+
+    try {
+      const response = await this.fetchJSON<any>(
+        `https://api.spotify.com/v1/albums/${albumId}/tracks`,
+        token
+      );
+      
+      // Album tracks don't include full track info, so we need to fetch each track
+      const trackIds = response.items.map((item: any) => item.id);
+      if (trackIds.length === 0) return [];
+      
+      const tracksResponse = await this.fetchJSON<any>(
+        `https://api.spotify.com/v1/tracks?ids=${trackIds.join(',')}`,
+        token
+      );
+      
+      return tracksResponse.tracks;
+    } catch (error) {
+      console.error('Error fetching album tracks:', error);
+      throw error;
+    }
+  }
+
+  static async getArtistTopTracks(artistId: string): Promise<SpotifyTrack[]> {
+    const token = await SpotifyAuthService.getAccessToken();
+    if (!token) throw new Error("No access token");
+
+    try {
+      // Get artist's top tracks (default market is user's country)
+      const response = await this.fetchJSON<any>(
+        `https://api.spotify.com/v1/artists/${artistId}/top-tracks?market=from_token`,
+        token
+      );
+      
+      return response.tracks;
+    } catch (error) {
+      console.error('Error fetching artist top tracks:', error);
+      throw error;
+    }
+  }
 }

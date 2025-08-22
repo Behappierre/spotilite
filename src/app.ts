@@ -111,6 +111,7 @@ export class SpotiLiteApp {
           window.addEventListener('spotify-login', () => this.handleLogin());
           window.addEventListener('spotify-logout', () => this.handleLogout());
           window.addEventListener('play-track', (e: any) => this.handlePlayTrack(e.detail.uri));
+          window.addEventListener('view-tracks', (e: any) => this.handleViewTracks(e.detail));
           
           // Jukebox events
           window.addEventListener('set-username', (e: any) => this.handleSetUsername(e.detail.username));
@@ -441,12 +442,12 @@ export class SpotiLiteApp {
       // Unmute - restore previous volume
       const previousVolume = localStorage.getItem('jukebox_volume') || '50';
       volumeSlider.value = previousVolume;
-      await this.handleVolumeChange({ target: volumeSlider } as Event);
+      await this.handleVolumeChange({ target: volumeSlider } as unknown as Event);
     } else {
       // Mute - store current volume and set to 0
       localStorage.setItem('jukebox_volume', volumeSlider.value);
       volumeSlider.value = '0';
-      await this.handleVolumeChange({ target: volumeSlider } as Event);
+      await this.handleVolumeChange({ target: volumeSlider } as unknown as Event);
     }
   }
 
@@ -495,12 +496,54 @@ export class SpotiLiteApp {
       // Unmute - restore previous volume
       const previousVolume = localStorage.getItem('jukebox_volume') || '50';
       jukeboxVolumeSlider.value = previousVolume;
-      await this.handleJukeboxVolumeChange({ target: jukeboxVolumeSlider } as Event);
+      await this.handleJukeboxVolumeChange({ target: jukeboxVolumeSlider } as unknown as Event);
     } else {
       // Mute - store current volume and set to 0
       localStorage.setItem('jukebox_volume', jukeboxVolumeSlider.value);
       jukeboxVolumeSlider.value = '0';
-      await this.handleJukeboxVolumeChange({ target: jukeboxVolumeSlider } as Event);
+      await this.handleJukeboxVolumeChange({ target: jukeboxVolumeSlider } as unknown as Event);
+    }
+  }
+
+  // Handle viewing tracks from playlists, albums, or artists
+  private async handleViewTracks(detail: { itemId: string; itemType: string; itemName: string; item: any }): Promise<void> {
+    try {
+      this.ui.setNotice(`Loading tracks from ${detail.itemName}...`);
+      
+      let tracks: SpotifyTrack[] = [];
+      
+      switch (detail.itemType) {
+        case 'playlist':
+          tracks = await SpotifyApiService.getPlaylistTracks(detail.itemId);
+          break;
+        case 'album':
+          tracks = await SpotifyApiService.getAlbumTracks(detail.itemId);
+          break;
+        case 'artist':
+          tracks = await SpotifyApiService.getArtistTopTracks(detail.itemId);
+          break;
+        default:
+          this.ui.setNotice(`Cannot view tracks for ${detail.itemType}`);
+          return;
+      }
+      
+      if (tracks.length === 0) {
+        this.ui.setNotice(`No tracks found in ${detail.itemName}`);
+        return;
+      }
+      
+      // Store these tracks as current search results for playback
+      this.currentSearchResults = tracks;
+      this.player.setSearchResults(tracks);
+      
+      // Display the tracks with a back button
+      this.ui.displayTracksFromItem(tracks, detail.itemType, detail.itemName, detail.item);
+      
+      this.ui.setNotice(`Found ${tracks.length} tracks in ${detail.itemName}`);
+      
+    } catch (error: any) {
+      this.ui.setNotice(`Error loading tracks: ${error.message}`);
+      console.error('Error in handleViewTracks:', error);
     }
   }
 }

@@ -212,7 +212,13 @@ export class UIManager {
                   <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
                 </svg>
                 Add to Queue
-              </button>` : ''
+              </button>` : 
+              `<button class="btn-view-tracks" data-item-id="${item.id}" data-item-type="${kind}" data-item-name="${this.escapeHtml(item.name)}">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+                View Tracks
+              </button>`
             }
             <a class="open" href="${link}" target="_blank" rel="noopener">
               Open in Spotify
@@ -240,6 +246,27 @@ export class UIManager {
                 trackArtist, 
                 trackUri,
                 track: item
+              } 
+            }));
+          }
+        };
+      }
+
+      // Add click handler for view tracks button
+      const viewTracksBtn = div.querySelector('.btn-view-tracks') as HTMLButtonElement;
+      if (viewTracksBtn) {
+        viewTracksBtn.onclick = () => {
+          const itemId = viewTracksBtn.dataset.itemId;
+          const itemType = viewTracksBtn.dataset.itemType;
+          const itemName = viewTracksBtn.dataset.itemName;
+          
+          if (itemId && itemType && itemName) {
+            window.dispatchEvent(new CustomEvent('view-tracks', { 
+              detail: { 
+                itemId, 
+                itemType, 
+                itemName,
+                item: item
               } 
             }));
           }
@@ -542,6 +569,39 @@ export class UIManager {
     } else {
       jukeboxPlayPauseBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
       jukeboxPlayPauseBtn.title = 'Pause';
+    }
+  }
+
+  // Display tracks from a specific item (playlist, album, artist) with back navigation
+  displayTracksFromItem(tracks: any[], itemType: string, itemName: string, originalItem: any): void {
+    if (!this.results) return;
+
+    // Create back button
+    const backButton = document.createElement('div');
+    backButton.className = 'back-to-search';
+    backButton.innerHTML = `
+      <button class="btn-back" onclick="window.location.reload()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+        </svg>
+        Back to Search
+      </button>
+      <h2 class="tracks-header">${itemType.charAt(0).toUpperCase() + itemType.slice(1)}: ${this.escapeHtml(itemName)}</h2>
+      <p class="tracks-subtitle">${tracks.length} tracks found</p>
+    `;
+
+    // Clear current results and add back button
+    this.results.innerHTML = '';
+    this.results.appendChild(backButton);
+
+    // Display tracks
+    const blocks: HTMLElement[] = [];
+    this.addItems(tracks, 'track', blocks);
+    
+    if (blocks.length > 0) {
+      blocks.forEach(b => this.results.appendChild(b));
+    } else {
+      this.results.innerHTML += '<div class="empty">No tracks found.</div>';
     }
   }
 }
