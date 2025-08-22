@@ -218,7 +218,31 @@ export class SpotiLiteApp {
 
   private async handleTogglePlayback(): Promise<void> {
     try {
-      await this.player.togglePlayback();
+      // Check if we have a queue and should start playing from it
+      const queue = this.queueManager.getQueue();
+      const currentTrack = this.queueManager.getCurrentTrack();
+      
+      if (queue.length > 0 && !currentTrack) {
+        // Start playing from queue
+        const trackUris = this.queueManager.getQueueAsTrackList();
+        const success = await this.player.playFromQueue(trackUris, 0);
+        
+        if (success) {
+          // Get the first track and set it as current
+          const firstTrack = queue[0];
+          this.queueManager.getNextTrack(); // This removes it from queue and sets as current
+          this.updateNowPlaying();
+          this.updateQueueDisplay();
+          this.ui.setNotice(`Now playing: ${firstTrack.track.name}`);
+        } else {
+          this.ui.setNotice("Failed to start queue playback");
+        }
+      } else if (currentTrack) {
+        // Toggle playback of current track
+        await this.player.togglePlayback();
+      } else {
+        this.ui.setNotice("No tracks in queue. Add some songs first!");
+      }
     } catch (error: any) {
       this.ui.setNotice("Toggle error: " + error.message);
     }
@@ -227,7 +251,13 @@ export class SpotiLiteApp {
   private async handleStopPlayback(): Promise<void> {
     try {
       await this.player.stopPlayback();
+      
+      // Clear current track from queue manager
+      this.queueManager.clearCurrentTrack();
+      
       this.ui.resetPlaybackUI();
+      this.updateNowPlaying();
+      this.updateQueueDisplay();
     } catch (error: any) {
       this.ui.setNotice("Stop error: " + error.message);
     }
@@ -235,11 +265,32 @@ export class SpotiLiteApp {
 
   private async handleNextTrack(): Promise<void> {
     try {
-      await this.player.playNextTrack();
-      const trackIndex = this.player.getCurrentTrackIndex();
-      const track = this.currentSearchResults[trackIndex];
-      if (track) {
-        this.ui.setNotice(`Playing: ${track.name}`);
+      const queue = this.queueManager.getQueue();
+      const currentTrack = this.queueManager.getCurrentTrack();
+      
+      if (queue.length > 0) {
+        // Play next track from queue
+        const nextTrack = this.queueManager.getNextTrack();
+        if (nextTrack) {
+          const success = await this.player.playTrack(nextTrack.track.uri, 0);
+          if (success) {
+            this.updateNowPlaying();
+            this.updateQueueDisplay();
+            this.ui.setNotice(`Now playing: ${nextTrack.track.name}`);
+          } else {
+            this.ui.setNotice("Failed to play next track");
+          }
+        } else {
+          this.ui.setNotice("No more tracks in queue");
+        }
+      } else {
+        // Fallback to search results
+        await this.player.playNextTrack();
+        const trackIndex = this.player.getCurrentTrackIndex();
+        const track = this.currentSearchResults[trackIndex];
+        if (track) {
+          this.ui.setNotice(`Playing: ${track.name}`);
+        }
       }
     } catch (error: any) {
       this.ui.setNotice(error.message);
@@ -248,6 +299,8 @@ export class SpotiLiteApp {
 
   private async handlePreviousTrack(): Promise<void> {
     try {
+      // For now, previous track in queue context would require more complex logic
+      // We'll fall back to search results for now
       await this.player.playPreviousTrack();
       const trackIndex = this.player.getCurrentTrackIndex();
       const track = this.currentSearchResults[trackIndex];

@@ -100,6 +100,16 @@ export class QueueManager {
     return nextTrack;
   }
 
+  // Get all tracks in queue as a list for Spotify context
+  getQueueAsTrackList(): string[] {
+    return this.queue.map(qt => qt.track.uri);
+  }
+
+  // Get current track URI
+  getCurrentTrackUri(): string | null {
+    return this.currentTrack ? this.currentTrack.track.uri : null;
+  }
+
   // Get current track
   getCurrentTrack(): QueuedTrack | null {
     return this.currentTrack;
@@ -131,6 +141,12 @@ export class QueueManager {
   clearQueue(): void {
     this.queue = [];
     this.userSongs.clear();
+    this.saveQueueToStorage();
+  }
+
+  // Clear current track
+  clearCurrentTrack(): void {
+    this.currentTrack = null;
     this.saveQueueToStorage();
   }
 

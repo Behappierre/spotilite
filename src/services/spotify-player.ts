@@ -203,4 +203,23 @@ export class SpotifyPlayerService {
   isReady(): boolean {
     return this.player !== null && this.deviceId !== null;
   }
+
+  // Play from queue context
+  async playFromQueue(trackUris: string[], startIndex: number = 0): Promise<boolean> {
+    try {
+      if (trackUris.length === 0) {
+        throw new Error("No tracks in queue");
+      }
+
+      if (startIndex >= trackUris.length) {
+        throw new Error("Invalid start index");
+      }
+
+      const startUri = trackUris[startIndex];
+      return await this.playTrack(startUri, startIndex);
+    } catch (error) {
+      console.error('Failed to play from queue:', error);
+      throw error;
+    }
+  }
 }
