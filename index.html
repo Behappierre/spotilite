@@ -594,8 +594,18 @@
         return;
       }
 
+      if (!spotifyUri) {
+        notice.textContent = "Invalid track URI";
+        return;
+      }
+
       try {
         const token = await getAccessToken();
+        if (!token) {
+          notice.textContent = "Authentication required. Please log in again.";
+          return;
+        }
+
         const response = await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
           method: 'PUT',
           headers: {
@@ -609,35 +619,68 @@
 
         if (response.ok) {
           currentTrackIndex = trackIndex;
-          notice.textContent = "Playing full track!";
+          notice.textContent = "Starting playback...";
+          
+          // Wait a moment for the player to start, then update UI
+          setTimeout(() => {
+            player.getCurrentState().then(state => {
+              if (state && state.track_window.current_track) {
+                updatePlaybackUI(state);
+              }
+            });
+          }, 500);
         } else {
-          notice.textContent = "Failed to start playback";
+          const errorData = await response.json().catch(() => ({}));
+          notice.textContent = `Playback failed: ${errorData.error?.message || response.statusText}`;
         }
       } catch (error) {
+        console.error('Playback error:', error);
         notice.textContent = "Playback error: " + error.message;
       }
     }
 
     async function playNextTrack() {
-      if (currentSearchResults.length === 0 || currentTrackIndex >= currentSearchResults.length - 1) {
-        notice.textContent = "No more tracks to play";
+      if (currentSearchResults.length === 0) {
+        notice.textContent = "No tracks available";
+        return;
+      }
+      
+      if (currentTrackIndex >= currentSearchResults.length - 1) {
+        notice.textContent = "Already at the last track";
         return;
       }
 
       currentTrackIndex++;
       const nextTrack = currentSearchResults[currentTrackIndex];
-      await playFullTrack(nextTrack.uri, currentTrackIndex);
+      
+      if (nextTrack && nextTrack.uri) {
+        await playFullTrack(nextTrack.uri, currentTrackIndex);
+        notice.textContent = `Playing: ${nextTrack.name}`;
+      } else {
+        notice.textContent = "Invalid track data";
+      }
     }
 
     async function playPreviousTrack() {
-      if (currentSearchResults.length === 0 || currentTrackIndex <= 0) {
-        notice.textContent = "No previous tracks";
+      if (currentSearchResults.length === 0) {
+        notice.textContent = "No tracks available";
+        return;
+      }
+      
+      if (currentTrackIndex <= 0) {
+        notice.textContent = "Already at the first track";
         return;
       }
 
       currentTrackIndex--;
       const prevTrack = currentSearchResults[currentTrackIndex];
-      await playFullTrack(prevTrack.uri, currentTrackIndex);
+      
+      if (prevTrack && prevTrack.uri) {
+        await playFullTrack(prevTrack.uri, currentTrackIndex);
+        notice.textContent = `Playing: ${prevTrack.name}`;
+      } else {
+        notice.textContent = "Invalid track data";
+      }
     }
 
     // Make functions globally accessible for HTML onclick handlers
@@ -652,32 +695,48 @@
       if (!player || !deviceId) return;
       
       try {
-        const token = await getAccessToken();
+        // Get current state from the Web Playback SDK
+        const state = await player.getCurrentState();
         
-        // Get current playback state to determine if we should play or pause
-        const stateResponse = await fetch('https://api.spotify.com/v1/me/player', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        
-        if (stateResponse.ok) {
-          const state = await stateResponse.json();
-          
-          if (state.is_playing) {
-            // Currently playing, so pause
-            await fetch('https://api.spotify.com/v1/me/player/pause', {
-              method: 'PUT',
-              headers: { 'Authorization': `Bearer ${token}` }
-            });
-          } else {
+        if (state) {
+          if (state.paused) {
             // Currently paused, so resume
-            await fetch('https://api.spotify.com/v1/me/player/play', {
-              method: 'PUT',
-              headers: { 'Authorization': `Bearer ${token}` }
-            });
+            await player.resume();
+          } else {
+            // Currently playing, so pause
+            await player.pause();
           }
+        } else {
+          // No current state, try to resume (this handles the case when no track is loaded)
+          await player.resume();
         }
       } catch (error) {
         console.error('Toggle playback error:', error);
+        // Fallback to API if SDK fails
+        try {
+          const token = await getAccessToken();
+          const stateResponse = await fetch('https://api.spotify.com/v1/me/player', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          
+          if (stateResponse.ok) {
+            const apiState = await stateResponse.json();
+            
+            if (apiState.is_playing) {
+              await fetch('https://api.spotify.com/v1/me/player/pause', {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}` }
+              });
+            } else {
+              await fetch('https://api.spotify.com/v1/me/player/play', {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}` }
+              });
+            }
+          }
+        } catch (apiError) {
+          console.error('API fallback error:', apiError);
+        }
       }
     }
 
@@ -685,8 +744,12 @@
       if (!player || !deviceId) return;
       
       try {
+        // Try to stop using the Web Playback SDK first
+        await player.pause();
+        
+        // Also stop via API to ensure it's completely stopped
         const token = await getAccessToken();
-        const response = await fetch('https://api.spotify.com/v1/me/player/pause', {
+        await fetch('https://api.spotify.com/v1/me/player/pause', {
           method: 'PUT',
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -703,6 +766,15 @@
         playBtn.title = 'Play';
       } catch (error) {
         console.error('Stop playback error:', error);
+        // If SDK fails, still try to reset UI
+        document.getElementById('audioPlayer').classList.remove('active');
+        document.getElementById('nowPlayingTitle').textContent = 'No track playing';
+        document.getElementById('nowPlayingArtist').textContent = '';
+        document.getElementById('progressFill').style.width = '0%';
+        
+        const playBtn = document.getElementById('playPauseBtn');
+        playBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+        playBtn.title = 'Play';
       }
     }
 
