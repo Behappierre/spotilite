@@ -14,7 +14,8 @@ export default defineConfig({
   server: {
     host: '127.0.0.1',
     port: 5173,
-    https: false // Set to true if you need HTTPS locally
+    strictPort: true,
+    https: undefined
   },
   resolve: {
     extensions: ['.ts', '.js']

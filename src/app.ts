@@ -75,6 +75,38 @@ export class SpotiLiteApp {
             volumeLevel.textContent = volumeSlider?.value + '%' || '50%';
           }
 
+          // Jukebox controls
+          const jukeboxPrevBtn = document.getElementById('jukeboxPrevBtn');
+          const jukeboxPlayPauseBtn = document.getElementById('jukeboxPlayPauseBtn');
+          const jukeboxNextBtn = document.getElementById('jukeboxNextBtn');
+          const jukeboxStopBtn = document.getElementById('jukeboxStopBtn');
+          const jukeboxVolumeSlider = document.getElementById('jukeboxVolumeSlider') as HTMLInputElement;
+          const jukeboxMuteBtn = document.getElementById('jukeboxMuteBtn');
+
+          if (jukeboxPrevBtn) {
+            jukeboxPrevBtn.onclick = () => this.handlePreviousTrack();
+          }
+
+          if (jukeboxPlayPauseBtn) {
+            jukeboxPlayPauseBtn.onclick = () => this.handleTogglePlayback();
+          }
+
+          if (jukeboxNextBtn) {
+            jukeboxNextBtn.onclick = () => this.handleNextTrack();
+          }
+
+          if (jukeboxStopBtn) {
+            jukeboxStopBtn.onclick = () => this.handleStopPlayback();
+          }
+
+          if (jukeboxVolumeSlider) {
+            jukeboxVolumeSlider.oninput = (e) => this.handleJukeboxVolumeChange(e);
+          }
+
+          if (jukeboxMuteBtn) {
+            jukeboxMuteBtn.onclick = () => this.handleJukeboxMuteToggle();
+          }
+
               // Custom events
           window.addEventListener('spotify-login', () => this.handleLogin());
           window.addEventListener('spotify-logout', () => this.handleLogout());
@@ -358,6 +390,54 @@ export class SpotiLiteApp {
       localStorage.setItem('jukebox_volume', volumeSlider.value);
       volumeSlider.value = '0';
       this.handleVolumeChange({ target: volumeSlider } as Event);
+    }
+  }
+
+  // Jukebox volume control handlers
+  private handleJukeboxVolumeChange(e: Event): void {
+    const target = e.target as HTMLInputElement;
+    const volume = parseInt(target.value);
+    
+    // Update both volume sliders
+    const volumeSlider = document.getElementById('volumeSlider') as HTMLInputElement;
+    if (volumeSlider) {
+      volumeSlider.value = volume.toString();
+    }
+    
+    // Update mute button state
+    const muteBtn = document.getElementById('muteBtn');
+    const jukeboxMuteBtn = document.getElementById('jukeboxMuteBtn');
+    
+    if (volume === 0) {
+      if (muteBtn) muteBtn.classList.add('muted');
+      if (jukeboxMuteBtn) jukeboxMuteBtn.classList.add('muted');
+    } else {
+      if (muteBtn) muteBtn.classList.remove('muted');
+      if (jukeboxMuteBtn) jukeboxMuteBtn.classList.remove('muted');
+    }
+
+    // Store volume preference
+    localStorage.setItem('jukebox_volume', volume.toString());
+    
+    this.ui.setNotice(`Volume set to ${volume}%`);
+  }
+
+  private handleJukeboxMuteToggle(): void {
+    const jukeboxVolumeSlider = document.getElementById('jukeboxVolumeSlider') as HTMLInputElement;
+    const jukeboxMuteBtn = document.getElementById('jukeboxMuteBtn');
+    
+    if (!jukeboxVolumeSlider || !jukeboxMuteBtn) return;
+
+    if (jukeboxMuteBtn.classList.contains('muted')) {
+      // Unmute - restore previous volume
+      const previousVolume = localStorage.getItem('jukebox_volume') || '50';
+      jukeboxVolumeSlider.value = previousVolume;
+      this.handleJukeboxVolumeChange({ target: jukeboxVolumeSlider } as Event);
+    } else {
+      // Mute - store current volume and set to 0
+      localStorage.setItem('jukebox_volume', jukeboxVolumeSlider.value);
+      jukeboxVolumeSlider.value = '0';
+      this.handleJukeboxVolumeChange({ target: jukeboxVolumeSlider } as Event);
     }
   }
 }

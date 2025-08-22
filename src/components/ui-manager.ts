@@ -462,6 +462,9 @@ export class UIManager {
           playBtn.title = 'Pause';
         }
       }
+
+      // Also update jukebox controls
+      this.updateJukeboxControls(state.paused ? 'play' : 'pause');
     }
   }
 
@@ -490,6 +493,23 @@ export class UIManager {
     if (playBtn) {
       playBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
       playBtn.title = 'Play';
+    }
+
+    // Also update jukebox controls
+    this.updateJukeboxControls('play');
+  }
+
+  // Update jukebox controls state
+  private updateJukeboxControls(state: 'play' | 'pause'): void {
+    const jukeboxPlayPauseBtn = document.getElementById('jukeboxPlayPauseBtn');
+    if (!jukeboxPlayPauseBtn) return;
+
+    if (state === 'play') {
+      jukeboxPlayPauseBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+      jukeboxPlayPauseBtn.title = 'Play';
+    } else {
+      jukeboxPlayPauseBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+      jukeboxPlayPauseBtn.title = 'Pause';
     }
   }
 }

@@ -614,10 +614,8 @@
       border-top: 1px solid rgba(255,255,255,.1); 
       padding: 16px; 
       z-index: 1000; 
-      display: none; 
+      display: block; 
     }
-    
-    .audio-player.active { display: block; }
     
     .audio-player-content { 
       max-width: 980px; 
@@ -747,6 +745,125 @@
       font-weight: 600;
       text-align: center;
     }
+
+    /* Jukebox Controls */
+    .jukebox-controls {
+      padding: 20px;
+      border-top: 1px solid rgba(255,255,255,.1);
+    }
+
+    .control-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .btn-control {
+      background: none;
+      border: 2px solid rgba(255,255,255,.1);
+      color: #e7eef7;
+      cursor: pointer;
+      padding: 12px;
+      border-radius: 50%;
+      transition: all 0.2s ease;
+      min-height: 48px;
+      min-width: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-control:hover {
+      border-color: #1db954;
+      background: rgba(29,185,84,.1);
+      transform: scale(1.05);
+    }
+
+    .btn-play-pause {
+      background: #1db954;
+      border-color: #1db954;
+      min-height: 56px;
+      min-width: 56px;
+    }
+
+    .btn-play-pause:hover {
+      background: #1ed760;
+      border-color: #1ed760;
+    }
+
+    .jukebox-volume {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .btn-volume {
+      background: none;
+      border: none;
+      color: #8fa0b3;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 50%;
+      transition: all 0.2s ease;
+      min-height: 36px;
+      min-width: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-volume:hover {
+      background: rgba(255,255,255,.1);
+      color: #e7eef7;
+    }
+
+    .btn-volume.muted {
+      color: #6b7c8f;
+    }
+
+    .volume-slider-small {
+      width: 120px;
+      height: 4px;
+      background: rgba(255,255,255,.1);
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+      -webkit-appearance: none;
+    }
+
+    .volume-slider-small::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      background: #1db954;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .volume-slider-small::-webkit-slider-thumb:hover {
+      background: #1ed760;
+      transform: scale(1.1);
+    }
+
+    .volume-slider-small::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      background: #1db954;
+      border-radius: 50%;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+    }
+
+    .volume-slider-small::-moz-range-thumb:hover {
+      background: #1ed760;
+      transform: scale(1.1);
+    }
     
     .progress-bar { 
       flex: 1; 
@@ -816,6 +933,42 @@
         <!-- Now Playing Section -->
         <div class="card">
           <div id="nowPlayingContainer"></div>
+          
+          <!-- Playback Controls -->
+          <div class="jukebox-controls">
+            <div class="control-row">
+              <button id="jukeboxPrevBtn" class="btn-control" title="Previous Track">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
+                </svg>
+              </button>
+              <button id="jukeboxPlayPauseBtn" class="btn-control btn-play-pause" title="Play">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M8 5v14l11-7z"/>
+                </svg>
+              </button>
+              <button id="jukeboxNextBtn" class="btn-control" title="Next Track">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M16 6h2v12h-2zm-3.5 6l-8.5 6V6z"/>
+                </svg>
+              </button>
+              <button id="jukeboxStopBtn" class="btn-control" title="Stop">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M6 6h12v12H6z"/>
+                </svg>
+              </button>
+            </div>
+            
+            <!-- Volume Control -->
+            <div class="jukebox-volume">
+              <button id="jukeboxMuteBtn" class="btn-volume" title="Mute">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                </svg>
+              </button>
+              <input type="range" id="jukeboxVolumeSlider" class="volume-slider-small" min="0" max="100" value="50" title="Volume">
+            </div>
+          </div>
         </div>
 
         <!-- Queue Section -->
