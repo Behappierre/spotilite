@@ -22,7 +22,7 @@
   ],
   "author": "SpotiLite Team",
   "license": "MIT",
-  "devDependencies": {
+  "dependencies": {
     "vite": "^5.0.0"
   },
   "engines": {
