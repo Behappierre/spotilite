@@ -567,12 +567,16 @@
           updateProgressBar(state.position, state.duration);
         }
         
-        // Update play/pause button
+        // Update play/pause button with proper icons
         const playBtn = document.getElementById('playPauseBtn');
         if (state.paused) {
+          // Show play button (triangle pointing right)
           playBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+          playBtn.title = 'Play';
         } else {
+          // Show pause button (two vertical bars)
           playBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+          playBtn.title = 'Pause';
         }
       }
     }
@@ -649,10 +653,29 @@
       
       try {
         const token = await getAccessToken();
-        const response = await fetch('https://api.spotify.com/v1/me/player/pause', {
-          method: 'PUT',
+        
+        // Get current playback state to determine if we should play or pause
+        const stateResponse = await fetch('https://api.spotify.com/v1/me/player', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
+        
+        if (stateResponse.ok) {
+          const state = await stateResponse.json();
+          
+          if (state.is_playing) {
+            // Currently playing, so pause
+            await fetch('https://api.spotify.com/v1/me/player/pause', {
+              method: 'PUT',
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+          } else {
+            // Currently paused, so resume
+            await fetch('https://api.spotify.com/v1/me/player/play', {
+              method: 'PUT',
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+          }
+        }
       } catch (error) {
         console.error('Toggle playback error:', error);
       }
@@ -668,10 +691,16 @@
           headers: { 'Authorization': `Bearer ${token}` }
         });
         
+        // Reset UI to stopped state
         document.getElementById('audioPlayer').classList.remove('active');
         document.getElementById('nowPlayingTitle').textContent = 'No track playing';
         document.getElementById('nowPlayingArtist').textContent = '';
         document.getElementById('progressFill').style.width = '0%';
+        
+        // Reset play button to play state
+        const playBtn = document.getElementById('playPauseBtn');
+        playBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+        playBtn.title = 'Play';
       } catch (error) {
         console.error('Stop playback error:', error);
       }
