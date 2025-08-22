@@ -100,4 +100,29 @@ export class SpotifyApiService {
 
     return response.ok;
   }
+
+  static async setVolume(volumePercent: number, deviceId: string): Promise<void> {
+    const token = await SpotifyAuthService.getAccessToken();
+    if (!token) throw new Error("No access token");
+
+    try {
+      // Spotify API expects volume as 0-100
+      const volume = Math.max(0, Math.min(100, volumePercent));
+      
+      const response = await fetch(`https://api.spotify.com/v1/me/player/volume?volume_percent=${volume}&device_id=${deviceId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Volume control failed: ${response.status}`);
+      }
+    } catch (error) {
+      console.error('Volume control error:', error);
+      throw error;
+    }
+  }
 }

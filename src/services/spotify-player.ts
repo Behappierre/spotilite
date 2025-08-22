@@ -222,4 +222,46 @@ export class SpotifyPlayerService {
       throw error;
     }
   }
+
+  // Set volume (0-100)
+  async setVolume(volumePercent: number): Promise<void> {
+    if (!this.player || !this.deviceId) return;
+
+    try {
+      // Convert percentage to 0-1 range for Spotify
+      const volume = Math.max(0, Math.min(1, volumePercent / 100));
+      
+      if (this.player.setVolume) {
+        // Try Web Playback SDK first
+        await this.player.setVolume(volume);
+      } else {
+        // Fallback to API
+        await SpotifyApiService.setVolume(volumePercent, this.deviceId);
+      }
+    } catch (error) {
+      console.error('Volume control error:', error);
+      // Fallback to API
+      try {
+        await SpotifyApiService.setVolume(volumePercent, this.deviceId);
+      } catch (apiError) {
+        console.error('API volume control also failed:', apiError);
+      }
+    }
+  }
+
+  // Get current volume
+  async getVolume(): Promise<number> {
+    if (!this.player || !this.deviceId) return 50; // Default
+
+    try {
+      if (this.player.getVolume) {
+        const volume = await this.player.getVolume();
+        return Math.round(volume * 100);
+      }
+    } catch (error) {
+      console.error('Get volume error:', error);
+    }
+    
+    return 50; // Default fallback
+  }
 }

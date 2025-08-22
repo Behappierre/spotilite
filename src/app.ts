@@ -397,7 +397,7 @@ export class SpotiLiteApp {
   }
 
   // Volume control handlers
-  private handleVolumeChange(e: Event): void {
+  private async handleVolumeChange(e: Event): Promise<void> {
     const target = e.target as HTMLInputElement;
     const volume = parseInt(target.value);
     
@@ -422,12 +422,16 @@ export class SpotiLiteApp {
     // Store volume preference
     localStorage.setItem('jukebox_volume', volume.toString());
     
-    // Note: Actual volume control would require Spotify Web Playback SDK volume control
-    // For now, this just manages the UI state
-    this.ui.setNotice(`Volume set to ${volume}%`);
+    // Actually control Spotify volume
+    try {
+      await this.player.setVolume(volume);
+      this.ui.setNotice(`Volume set to ${volume}%`);
+    } catch (error: any) {
+      this.ui.setNotice(`Volume control failed: ${error.message}`);
+    }
   }
 
-  private handleMuteToggle(): void {
+  private async handleMuteToggle(): Promise<void> {
     const volumeSlider = document.getElementById('volumeSlider') as HTMLInputElement;
     const muteBtn = document.getElementById('muteBtn');
     
@@ -437,17 +441,17 @@ export class SpotiLiteApp {
       // Unmute - restore previous volume
       const previousVolume = localStorage.getItem('jukebox_volume') || '50';
       volumeSlider.value = previousVolume;
-      this.handleVolumeChange({ target: volumeSlider } as Event);
+      await this.handleVolumeChange({ target: volumeSlider } as Event);
     } else {
       // Mute - store current volume and set to 0
       localStorage.setItem('jukebox_volume', volumeSlider.value);
       volumeSlider.value = '0';
-      this.handleVolumeChange({ target: volumeSlider } as Event);
+      await this.handleVolumeChange({ target: volumeSlider } as Event);
     }
   }
 
   // Jukebox volume control handlers
-  private handleJukeboxVolumeChange(e: Event): void {
+  private async handleJukeboxVolumeChange(e: Event): Promise<void> {
     const target = e.target as HTMLInputElement;
     const volume = parseInt(target.value);
     
@@ -472,10 +476,16 @@ export class SpotiLiteApp {
     // Store volume preference
     localStorage.setItem('jukebox_volume', volume.toString());
     
-    this.ui.setNotice(`Volume set to ${volume}%`);
+    // Actually control Spotify volume
+    try {
+      await this.player.setVolume(volume);
+      this.ui.setNotice(`Volume set to ${volume}%`);
+    } catch (error: any) {
+      this.ui.setNotice(`Volume control failed: ${error.message}`);
+    }
   }
 
-  private handleJukeboxMuteToggle(): void {
+  private async handleJukeboxMuteToggle(): Promise<void> {
     const jukeboxVolumeSlider = document.getElementById('jukeboxVolumeSlider') as HTMLInputElement;
     const jukeboxMuteBtn = document.getElementById('jukeboxMuteBtn');
     
@@ -485,12 +495,12 @@ export class SpotiLiteApp {
       // Unmute - restore previous volume
       const previousVolume = localStorage.getItem('jukebox_volume') || '50';
       jukeboxVolumeSlider.value = previousVolume;
-      this.handleJukeboxVolumeChange({ target: jukeboxVolumeSlider } as Event);
+      await this.handleJukeboxVolumeChange({ target: jukeboxVolumeSlider } as Event);
     } else {
       // Mute - store current volume and set to 0
       localStorage.setItem('jukebox_volume', jukeboxVolumeSlider.value);
       jukeboxVolumeSlider.value = '0';
-      this.handleJukeboxVolumeChange({ target: jukeboxVolumeSlider } as Event);
+      await this.handleJukeboxVolumeChange({ target: jukeboxVolumeSlider } as Event);
     }
   }
 }

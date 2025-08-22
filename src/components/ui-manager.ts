@@ -179,7 +179,7 @@ export class UIManager {
           name: item.name,
           album: item.album,
           albumImages: item.album?.images,
-          hasImages: !!item.images,
+          hasImages: !!(item.images && Array.isArray(item.images)),
           images: item.images
         });
       }
@@ -245,26 +245,44 @@ export class UIManager {
   }
 
   private getCardImage(item: any, kind: string): string {
+    // Safety check for null item
+    if (!item) {
+      console.log(`getCardImage called with null item for kind: ${kind}`);
+      return "";
+    }
+
     if (kind === "track") {
       // For tracks, get image from album
-      if (item.album?.images && item.album.images.length > 0) {
-        // Use middle-sized image (index 1) if available, otherwise first
-        const imageIndex = item.album.images.length > 1 ? 1 : 0;
-        const imageUrl = item.album.images[imageIndex].url;
-        console.log(`Track "${item.name}" - Album: "${item.album.name}", Image: ${imageUrl}`);
-        return imageUrl;
+      if (item.album && item.album.images && Array.isArray(item.album.images) && item.album.images.length > 0) {
+        try {
+          // Use middle-sized image (index 1) if available, otherwise first
+          const imageIndex = item.album.images.length > 1 ? 1 : 0;
+          const imageUrl = item.album.images[imageIndex]?.url;
+          if (imageUrl) {
+            console.log(`Track "${item.name}" - Album: "${item.album.name}", Image: ${imageUrl}`);
+            return imageUrl;
+          }
+        } catch (error) {
+          console.error(`Error getting track image for "${item.name}":`, error);
+        }
       }
       console.log(`Track "${item.name}" - No album images found`);
       return "";
     }
     
     // For other types (artist, album, playlist), use their own images
-    if (item.images && item.images.length > 0) {
-      // Use middle-sized image (index 1) if available, otherwise first
-      const imageIndex = item.images.length > 1 ? 1 : 0;
-      const imageUrl = item.images[imageIndex].url;
-      console.log(`${kind.charAt(0).toUpperCase() + kind.slice(1)} "${item.name}" - Image: ${imageUrl}`);
-      return imageUrl;
+    if (item.images && Array.isArray(item.images) && item.images.length > 0) {
+      try {
+        // Use middle-sized image (index 1) if available, otherwise first
+        const imageIndex = item.images.length > 1 ? 1 : 0;
+        const imageUrl = item.images[imageIndex]?.url;
+        if (imageUrl) {
+          console.log(`${kind.charAt(0).toUpperCase() + kind.slice(1)} "${item.name}" - Image: ${imageUrl}`);
+          return imageUrl;
+        }
+      } catch (error) {
+        console.error(`Error getting ${kind} image for "${item.name}":`, error);
+      }
     }
     
     console.log(`${kind.charAt(0).toUpperCase() + kind.slice(1)} "${item.name}" - No images found`);
@@ -289,7 +307,10 @@ export class UIManager {
   }
 
   private formatArtists(artists: any[]): string {
-    return (artists || []).map((a: any) => a.name).join(", ");
+    if (!artists || !Array.isArray(artists)) {
+      return "";
+    }
+    return artists.map((a: any) => a?.name || "Unknown Artist").join(", ");
   }
 
   private escapeHtml(s: string): string {
