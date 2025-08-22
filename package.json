@@ -1,40 +1,28 @@
 {
   "name": "spotilite",
   "version": "1.0.0",
-  "description": "A clean, minimal Spotify web application with full playback capabilities",
+  "description": "A clean, minimal Spotify-lite application with full playback controls",
+  "main": "dist/index.js",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "tsc && vite build",
+    "build:netlify": "tsc && vite build",
     "preview": "vite preview",
-    "serve": "vite preview --port 8080",
-    "start": "vite preview --port 8080 --host",
-    "certs": "node generate-certs.js",
-    "build:netlify": "NODE_ENV=production NETLIFY=true vite build"
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "vite": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.11",
+    "typescript": "^5.9.2"
   },
   "keywords": [
     "spotify",
     "music",
     "player",
-    "web-app",
-    "vanilla-js",
-    "oauth",
-    "playback"
+    "typescript"
   ],
-  "author": "SpotiLite Team",
-  "license": "MIT",
-  "dependencies": {
-    "vite": "^5.0.0",
-    "terser": "^5.0.0"
-  },
-  "engines": {
-    "node": ">=18.0.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/yourusername/spotilite.git"
-  },
-  "bugs": {
-    "url": "https://github.com/yourusername/spotilite/issues"
-  },
-  "homepage": "https://github.com/yourusername/spotilite#readme"
+  "author": "Your Name",
+  "license": "MIT"
 }

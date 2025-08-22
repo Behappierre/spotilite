@@ -1,204 +1,159 @@
-# 🎵 SpotiLite
+# 🎵 SpotiLite - TypeScript Edition
 
-A clean, minimal Spotify web application that runs locally with full playback capabilities. Built with vanilla HTML/CSS/JS and the Spotify Web Playback SDK.
+A clean, minimal Spotify-lite application built with **TypeScript** and modern web technologies. Features full playback controls, search functionality, and a beautiful UI.
 
-## ✨ Features
+## ✨ **Features**
 
-- **🔐 Spotify OAuth 2.0 Authentication** - Secure login with PKCE flow
-- **🔍 Advanced Search** - Search across tracks, artists, albums, and playlists
-- **🎧 Full Track Playback** - Complete song playback using Spotify Web Playback SDK
-- **⏭️ Auto-Play Navigation** - Automatic progression through search results
-- **🎮 Interactive Controls** - Play, pause, skip, and seek functionality
-- **📱 Responsive Design** - Modern, mobile-friendly interface
-- **🔒 Local Development** - Runs completely locally with HTTPS support
+- 🔐 **Spotify OAuth 2.0 with PKCE** - Secure authentication
+- 🎵 **Full Track Playback** - Using Spotify Web Playback SDK
+- 🔍 **Advanced Search** - Tracks, artists, albums, and playlists
+- 🎛️ **Complete Player Controls** - Play, pause, stop, next, previous, seek
+- 📱 **Responsive Design** - Works on all devices
+- 🚀 **Modern Architecture** - TypeScript, ES6+, modular design
 
-## 🚀 Quick Start
+## 🏗️ **Project Structure**
 
-### Prerequisites
-
-- **Spotify Premium Account** - Required for full playback functionality
-- **Node.js** (v14 or higher)
-- **Git** (for cloning the repository)
-
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/yourusername/spotilite.git
-cd spotilite
+```
+spotilite/
+├── src/
+│   ├── types/
+│   │   └── spotify.ts          # TypeScript interfaces
+│   ├── services/
+│   │   ├── spotify-auth.ts     # Authentication service
+│   │   ├── spotify-api.ts      # API calls service
+│   │   └── spotify-player.ts   # Web Playback SDK service
+│   ├── components/
+│   │   └── ui-manager.ts       # UI management
+│   ├── app.ts                  # Main application logic
+│   └── main.ts                 # Entry point
+├── index.html                  # Clean HTML structure
+├── package.json                # Dependencies and scripts
+├── tsconfig.json              # TypeScript configuration
+├── vite.config.ts             # Vite build configuration
+└── README.md                  # This file
 ```
 
-### 2. Spotify Developer Setup
+## 🚀 **Getting Started**
 
+### **Prerequisites**
+- Node.js 18+ 
+- Spotify Premium account (for full playback)
+- Spotify Developer account
+
+### **1. Setup Spotify App**
 1. Go to [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
 2. Create a new app
-3. Copy your **Client ID**
-4. Add these Redirect URIs:
-   - `https://127.0.0.1:5173/` (for development)
-   - `https://localhost:5173/` (alternative)
-5. Save your changes
+3. Add redirect URI: `http://127.0.0.1:5173/`
+4. Copy your Client ID
 
-### 3. Configure the App
-
-1. Open `index.html`
-2. Replace `YOUR_SPOTIFY_CLIENT_ID` with your actual Client ID
-3. Save the file
-
-### 4. Install Dependencies
-
+### **2. Install Dependencies**
 ```bash
 npm install
 ```
 
-### 5. Generate SSL Certificates (for HTTPS)
-
-```bash
-npm run certs
+### **3. Configure Client ID**
+Update `src/services/spotify-auth.ts` with your Client ID:
+```typescript
+private static readonly CLIENT_ID = "YOUR_CLIENT_ID_HERE";
 ```
 
-### 6. Start Development Server
-
+### **4. Run Development Server**
 ```bash
 npm run dev
 ```
 
-The app will open at `https://127.0.0.1:5173/`
+The app will be available at `http://127.0.0.1:5173/`
 
-## 🛠️ Development
+## 🛠️ **Development**
 
-### Available Scripts
-
-- `npm run dev` - Start development server with HTTPS
+### **Available Scripts**
+- `npm run dev` - Start development server
 - `npm run build` - Build for production
 - `npm run preview` - Preview production build
-- `npm run serve` - Serve static files
-- `npm run start` - Start production server
-- `npm run certs` - Generate SSL certificates
+- `npm run type-check` - TypeScript type checking
 
-### Project Structure
+### **TypeScript Benefits**
+- **Type Safety** - Catch errors at compile time
+- **Better IDE Support** - IntelliSense, refactoring, navigation
+- **Modular Architecture** - Clean separation of concerns
+- **Maintainability** - Easier to understand and modify
+- **Scalability** - Better for growing applications
 
+## 🎯 **Architecture Overview**
+
+### **Services Layer**
+- **`SpotifyAuthService`** - Handles OAuth flow and token management
+- **`SpotifyApiService`** - Manages all Spotify API calls
+- **`SpotifyPlayerService`** - Controls Web Playback SDK
+
+### **UI Layer**
+- **`UIManager`** - Manages all DOM interactions and UI updates
+- **Event-driven** - Uses custom events for loose coupling
+
+### **Main Application**
+- **`SpotiLiteApp`** - Orchestrates all services and UI components
+- **Clean separation** - Each component has a single responsibility
+
+## 🔧 **Key Improvements Over Vanilla JS**
+
+1. **Type Safety** - No more runtime errors from typos
+2. **Modular Design** - Easy to test and maintain individual components
+3. **Better Error Handling** - Compile-time error detection
+4. **IDE Support** - Full IntelliSense and refactoring capabilities
+5. **Code Organization** - Clear structure and separation of concerns
+6. **Maintainability** - Easier to add features and fix bugs
+
+## 🌐 **Deployment**
+
+### **Netlify (Recommended)**
+1. Push to GitHub
+2. Connect repository to Netlify
+3. Build command: `npm run build`
+4. Publish directory: `dist`
+
+### **Manual Build**
+```bash
+npm run build
+# Upload dist/ folder to your hosting provider
 ```
-spotilite/
-├── index.html          # Main application file
-├── package.json        # Dependencies and scripts
-├── vite.config.js      # Vite configuration
-├── .gitignore          # Git ignore rules
-├── README.md           # This file
-├── setup.md            # Detailed setup instructions
-└── generate-certs.js   # SSL certificate generator
-```
 
-## 🎮 How to Use
+## 🐛 **Troubleshooting**
 
-### Authentication
-1. Click "Log in with Spotify"
-2. Authorize the application
-3. You'll be redirected back to SpotiLite
+### **Common Issues**
+- **"Player not ready"** - Wait for Web Playback SDK to initialize
+- **Authentication errors** - Check Client ID and redirect URI
+- **Playback issues** - Ensure you have Spotify Premium
 
-### Search and Playback
-1. **Search** - Enter any song, artist, album, or playlist
-2. **Filter** - Use the type pills to narrow results
-3. **Play** - Click "Play Full" on any track
-4. **Navigate** - Use the player controls to skip tracks
-5. **Seek** - Click on the progress bar to jump to any position
+### **Development Tips**
+- Use `npm run type-check` to catch TypeScript errors
+- Check browser console for detailed error messages
+- Verify Spotify app settings match your local setup
 
-### Player Controls
-- **⏮️ Previous** - Go to previous track in search results
-- **⏯️ Play/Pause** - Control playback
-- **⏭️ Next** - Go to next track in search results
-- **⏹️ Stop** - Stop playback and reset player
+## 📚 **API Reference**
 
-## 🔧 Technical Details
+### **Spotify Web API**
+- [Authentication Guide](https://developer.spotify.com/documentation/web-api/tutorials/code-pkce-flow)
+- [Web Playback SDK](https://developer.spotify.com/documentation/web-playback-sdk)
+- [Search API](https://developer.spotify.com/documentation/web-api/reference/search)
 
-### Technologies Used
-- **Frontend**: Vanilla HTML5, CSS3, JavaScript (ES6+)
-- **Build Tool**: Vite
-- **Authentication**: OAuth 2.0 with PKCE
-- **Playback**: Spotify Web Playback SDK
-- **Styling**: CSS Custom Properties, Flexbox, Grid
-
-### Key Features Implementation
-- **OAuth 2.0 Flow**: Implements the recommended Authorization Code with PKCE
-- **Web Playback SDK**: Full integration with Spotify's playback system
-- **Auto-play**: Intelligent track progression through search results
-- **Progress Bar**: Real-time updates with click-to-seek functionality
-- **Sticky Search**: Search bar remains accessible while scrolling
-
-### API Endpoints Used
-- `https://api.spotify.com/v1/search` - Search for content
-- `https://api.spotify.com/v1/me/player/play` - Start playback
-- `https://api.spotify.com/v1/me/player/pause` - Pause playback
-- `https://api.spotify.com/v1/me/player/seek` - Seek to position
-
-## 🚨 Troubleshooting
-
-### Common Issues
-
-#### "Invalid redirect URI" Error
-- Ensure your Spotify Dashboard redirect URI exactly matches your app URL
-- Check for trailing slashes and correct protocol (HTTPS)
-- Try using `127.0.0.1` instead of `localhost`
-
-#### SSL Certificate Errors
-- Run `npm run certs` to generate new certificates
-- Ensure you're using HTTPS in development
-- Check that `vite.config.js` has the correct certificate paths
-
-#### Playback Not Working
-- Verify you have a Spotify Premium account
-- Check browser console for Web Playback SDK errors
-- Ensure the `streaming` scope is included in authentication
-
-#### Search Not Working
-- Check that you're logged in to Spotify
-- Verify your access token hasn't expired
-- Check browser console for API errors
-
-### Browser Compatibility
-- **Chrome**: Full support
-- **Firefox**: Full support
-- **Safari**: Full support
-- **Edge**: Full support
-
-## 📱 Mobile Support
-
-The application is fully responsive and works on mobile devices. The sticky search bar and touch-friendly controls provide an optimal mobile experience.
-
-## 🔒 Security Features
-
-- **HTTPS Only**: All development and production builds use HTTPS
-- **OAuth 2.0**: Secure authentication flow
-- **PKCE**: Protection against authorization code interception
-- **Local Storage**: Secure token storage with expiration handling
-
-## 🤝 Contributing
+## 🤝 **Contributing**
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
-## 📄 License
+## 📄 **License**
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License - see LICENSE file for details
 
-## 🙏 Acknowledgments
+## 🙏 **Acknowledgments**
 
-- **Spotify** for providing the Web API and Web Playback SDK
-- **Vite** for the excellent development experience
-- **Open Source Community** for inspiration and tools
-
-## 📞 Support
-
-If you encounter any issues or have questions:
-
-1. Check the troubleshooting section above
-2. Review the browser console for error messages
-3. Ensure all prerequisites are met
-4. Open an issue on GitHub with detailed information
+- Spotify for the excellent APIs and SDKs
+- Vite team for the fast build tool
+- TypeScript team for the amazing language
 
 ---
 
-**Built with ❤️ using Spotify Web API + Web Playback SDK**
-
-*Full playback available with Premium account*
+**Built with ❤️ and TypeScript**
