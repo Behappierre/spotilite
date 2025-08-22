@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Exit on any error
+set -e
+
 echo "🔍 Debugging SpotiLite build process..."
 
 echo "📁 Current directory: $(pwd)"
@@ -25,13 +28,13 @@ find node_modules -name "vite" -type f 2>/dev/null || echo "Vite not found in no
 echo "🔍 NPM bin:"
 npm bin
 
-echo "🔍 Global npm packages:"
-npm list -g --depth=0
-
 echo "🔍 Local npm packages:"
 npm list --depth=0
 
 echo "🏗️ Attempting build..."
 npm run build
+
+echo "📁 Checking build output..."
+ls -la dist/ || echo "dist directory not found"
 
 echo "✅ Debug complete!"
