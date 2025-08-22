@@ -1,4 +1,5 @@
 import { SpotifyProfile, SpotifySearchResponse } from '../types/spotify';
+import { QueuedTrack } from '../services/queue-manager';
 
 export class UIManager {
   private authArea: HTMLElement;
@@ -7,6 +8,9 @@ export class UIManager {
   private empty: HTMLElement;
   private typePills: HTMLElement;
   private selectedTypes: Set<string> = new Set(["track", "artist"]);
+  private queueContainer: HTMLElement;
+  private nowPlayingContainer: HTMLElement;
+  private userInputContainer: HTMLElement;
 
   constructor() {
     this.authArea = document.getElementById("authArea")!;
@@ -14,8 +18,12 @@ export class UIManager {
     this.results = document.getElementById("results")!;
     this.empty = document.getElementById("empty")!;
     this.typePills = document.getElementById("typePills")!;
+    this.queueContainer = document.getElementById("queueContainer")!;
+    this.nowPlayingContainer = document.getElementById("nowPlayingContainer")!;
+    this.userInputContainer = document.getElementById("userInputContainer")!;
     
     this.initializeTypePills();
+    this.initializeJukeboxUI();
   }
 
   private initializeTypePills(): void {
@@ -24,6 +32,67 @@ export class UIManager {
       const pill = this.createTypePill(type);
       this.typePills.appendChild(pill);
     });
+  }
+
+  private initializeJukeboxUI(): void {
+    // Initialize user input interface
+    this.setupUserInput();
+    
+    // Initialize now playing display
+    this.updateNowPlaying(null);
+    
+    // Initialize queue display
+    this.updateQueueDisplay([]);
+  }
+
+  private setupUserInput(): void {
+    if (!this.userInputContainer) return;
+    
+    this.userInputContainer.innerHTML = `
+      <div class="user-input-section">
+        <h3>🎵 Welcome to SpotiLite Jukebox!</h3>
+        <div class="user-input-form">
+          <input type="text" id="usernameInput" placeholder="Enter your name" class="username-input" maxlength="20">
+          <button id="setUsernameBtn" class="btn btn-large">Start Adding Songs</button>
+        </div>
+        <div id="userStatus" class="user-status" style="display: none;">
+          <span>Logged in as: <strong id="currentUsername"></strong></span>
+          <button id="changeUserBtn" class="btn btn-secondary btn-small">Change User</button>
+        </div>
+      </div>
+    `;
+
+    // Add event listeners
+    const setUsernameBtn = document.getElementById('setUsernameBtn');
+    const usernameInput = document.getElementById('usernameInput') as HTMLInputElement;
+    const changeUserBtn = document.getElementById('changeUserBtn');
+
+    if (setUsernameBtn) {
+      setUsernameBtn.onclick = () => {
+        const username = usernameInput.value.trim();
+        if (username) {
+          window.dispatchEvent(new CustomEvent('set-username', { detail: { username } }));
+        }
+      };
+    }
+
+    if (changeUserBtn) {
+      changeUserBtn.onclick = () => {
+        window.dispatchEvent(new CustomEvent('change-user'));
+      };
+    }
+
+    // Enter key support
+    if (usernameInput) {
+      usernameInput.onkeypress = (e) => {
+        if (e.key === 'Enter') {
+          const username = usernameInput.value.trim();
+          if (username) {
+            window.dispatchEvent(new CustomEvent('set-username', { detail: { username } }));
+          }
+        }
+      };
+    }
   }
 
   private createTypePill(label: string): HTMLElement {
@@ -132,11 +201,11 @@ export class UIManager {
           <div class="sub">${this.getSubtitle(item, kind)}</div>
           <div class="row" style="margin-top:6px; gap:8px;">
             ${kind === "track" ? 
-              `<button class="btn-play" data-uri="${item.uri}">
+              `<button class="btn-add-queue" data-track-id="${item.id}" data-track-name="${this.escapeHtml(item.name)}" data-track-artist="${this.escapeHtml(this.formatArtists(item.artists))}" data-track-uri="${item.uri}">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M8 5v14l11-7z"/>
+                  <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
                 </svg>
-                Play Full
+                Add to Queue
               </button>` : ''
             }
             <a class="open" href="${link}" target="_blank" rel="noopener">
@@ -148,13 +217,25 @@ export class UIManager {
           </div>
         </div>`;
 
-      // Add click handler for play button
-      const playBtn = div.querySelector('.btn-play') as HTMLButtonElement;
-      if (playBtn) {
-        playBtn.onclick = () => {
-          const uri = playBtn.dataset.uri;
-          if (uri) {
-            window.dispatchEvent(new CustomEvent('play-track', { detail: { uri } }));
+      // Add click handler for add to queue button
+      const addQueueBtn = div.querySelector('.btn-add-queue') as HTMLButtonElement;
+      if (addQueueBtn) {
+        addQueueBtn.onclick = () => {
+          const trackId = addQueueBtn.dataset.trackId;
+          const trackName = addQueueBtn.dataset.trackName;
+          const trackArtist = addQueueBtn.dataset.trackArtist;
+          const trackUri = addQueueBtn.dataset.trackUri;
+          
+          if (trackId && trackName && trackArtist && trackUri) {
+            window.dispatchEvent(new CustomEvent('add-to-queue', { 
+              detail: { 
+                trackId, 
+                trackName, 
+                trackArtist, 
+                trackUri,
+                track: item
+              } 
+            }));
           }
         };
       }
@@ -227,6 +308,130 @@ export class UIManager {
 
   getSelectedTypes(): string[] {
     return Array.from(this.selectedTypes);
+  }
+
+  // Update now playing display
+  updateNowPlaying(queuedTrack: QueuedTrack | null): void {
+    if (!this.nowPlayingContainer) return;
+
+    if (queuedTrack) {
+      const track = queuedTrack.track;
+      this.nowPlayingContainer.innerHTML = `
+        <div class="now-playing-card">
+          <div class="now-playing-artwork">
+            <img src="${this.getCardImage(track, 'track')}" alt="${track.name}" class="now-playing-image">
+          </div>
+          <div class="now-playing-info">
+            <h2 class="now-playing-title">${this.escapeHtml(track.name)}</h2>
+            <p class="now-playing-artist">${this.formatArtists(track.artists)}</p>
+            <p class="now-playing-album">${track.album?.name || ''}</p>
+            <p class="now-playing-user">Added by: <strong>${queuedTrack.addedBy}</strong></p>
+          </div>
+        </div>
+      `;
+    } else {
+      this.nowPlayingContainer.innerHTML = `
+        <div class="now-playing-card empty">
+          <div class="now-playing-placeholder">
+            <span class="music-icon">🎵</span>
+            <h3>No track currently playing</h3>
+            <p>Search for songs and add them to the queue to get started!</p>
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  // Update queue display
+  updateQueueDisplay(queue: QueuedTrack[]): void {
+    if (!this.queueContainer) return;
+
+    if (queue.length === 0) {
+      this.queueContainer.innerHTML = `
+        <div class="queue-empty">
+          <span class="queue-icon">📋</span>
+          <h3>Queue is empty</h3>
+          <p>Search for songs and add them to start building your playlist!</p>
+        </div>
+      `;
+      return;
+    }
+
+    const queueItems = queue.map((queuedTrack, index) => {
+      const track = queuedTrack.track;
+      const estimatedTime = queuedTrack.estimatedStartTime;
+      const timeString = estimatedTime ? this.formatTimeUntil(estimatedTime) : '';
+      
+      return `
+        <div class="queue-item" data-track-id="${queuedTrack.id}">
+          <div class="queue-item-artwork">
+            <img src="${this.getCardImage(track, 'track')}" alt="${track.name}" class="queue-image">
+          </div>
+          <div class="queue-item-info">
+            <h4 class="queue-item-title">${this.escapeHtml(track.name)}</h4>
+            <p class="queue-item-artist">${this.formatArtists(track.artists)}</p>
+            <p class="queue-item-user">Added by: <strong>${queuedTrack.addedBy}</strong></p>
+            ${timeString ? `<p class="queue-item-time">⏰ ${timeString}</p>` : ''}
+          </div>
+          <div class="queue-item-actions">
+            <button class="btn-remove-queue" data-track-id="${queuedTrack.id}" title="Remove from queue">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    this.queueContainer.innerHTML = `
+      <div class="queue-header">
+        <h3>📋 Up Next (${queue.length} songs)</h3>
+      </div>
+      <div class="queue-list">
+        ${queueItems}
+      </div>
+    `;
+
+    // Add event listeners for remove buttons
+    this.queueContainer.querySelectorAll('.btn-remove-queue').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const trackId = (e.currentTarget as HTMLElement).dataset.trackId;
+        if (trackId) {
+          window.dispatchEvent(new CustomEvent('remove-from-queue', { detail: { trackId } }));
+        }
+      });
+    });
+  }
+
+  // Update user status display
+  updateUserStatus(username: string | null): void {
+    const userStatus = document.getElementById('userStatus');
+    const currentUsername = document.getElementById('currentUsername');
+    const userInputForm = document.querySelector('.user-input-form') as HTMLElement;
+
+    if (username) {
+      if (userStatus) userStatus.style.display = 'block';
+      if (currentUsername) currentUsername.textContent = username;
+      if (userInputForm) userInputForm.style.display = 'none';
+    } else {
+      if (userStatus) userStatus.style.display = 'none';
+      if (userInputForm) userInputForm.style.display = 'block';
+    }
+  }
+
+  // Format time until estimated start
+  private formatTimeUntil(targetTime: Date): string {
+    const now = new Date();
+    const diffMs = targetTime.getTime() - now.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    
+    if (diffMins < 1) return 'Starting soon';
+    if (diffMins < 60) return `In ${diffMins} min`;
+    
+    const diffHours = Math.floor(diffMins / 60);
+    const remainingMins = diffMins % 60;
+    return `In ${diffHours}h ${remainingMins}m`;
   }
 
   updatePlaybackUI(state: any): void {

@@ -2,16 +2,22 @@ import { SpotifyAuthService } from './services/spotify-auth';
 import { SpotifyApiService } from './services/spotify-api';
 import { SpotifyPlayerService } from './services/spotify-player';
 import { UIManager } from './components/ui-manager';
+import { QueueManager } from './services/queue-manager';
+import { UserManager } from './services/user-manager';
 import { SpotifyTrack } from './types/spotify';
 
 export class SpotiLiteApp {
   private ui: UIManager;
   private player: SpotifyPlayerService;
+  private queueManager: QueueManager;
+  private userManager: UserManager;
   private currentSearchResults: SpotifyTrack[] = [];
 
   constructor() {
     this.ui = new UIManager();
     this.player = new SpotifyPlayerService();
+    this.queueManager = new QueueManager();
+    this.userManager = new UserManager();
     
     this.setupEventListeners();
     this.boot();
@@ -45,16 +51,40 @@ export class SpotiLiteApp {
       prevBtn.onclick = () => this.handlePreviousTrack();
     }
 
-    // Progress bar
-    const progressBar = document.querySelector('.progress-bar') as HTMLElement;
-    if (progressBar) {
-      progressBar.onclick = (e: MouseEvent) => this.handleSeek(e);
-    }
+              // Progress bar
+          const progressBar = document.querySelector('.progress-bar') as HTMLElement;
+          if (progressBar) {
+            progressBar.onclick = (e: MouseEvent) => this.handleSeek(e);
+          }
 
-    // Custom events
-    window.addEventListener('spotify-login', () => this.handleLogin());
-    window.addEventListener('spotify-logout', () => this.handleLogout());
-    window.addEventListener('play-track', (e: any) => this.handlePlayTrack(e.detail.uri));
+          // Volume controls
+          const volumeSlider = document.getElementById('volumeSlider') as HTMLInputElement;
+          const muteBtn = document.getElementById('muteBtn');
+          const volumeLevel = document.getElementById('volumeLevel');
+
+          if (volumeSlider) {
+            volumeSlider.oninput = (e) => this.handleVolumeChange(e);
+          }
+
+          if (muteBtn) {
+            muteBtn.onclick = () => this.handleMuteToggle();
+          }
+
+          // Initialize volume display
+          if (volumeLevel) {
+            volumeLevel.textContent = volumeSlider?.value + '%' || '50%';
+          }
+
+              // Custom events
+          window.addEventListener('spotify-login', () => this.handleLogin());
+          window.addEventListener('spotify-logout', () => this.handleLogout());
+          window.addEventListener('play-track', (e: any) => this.handlePlayTrack(e.detail.uri));
+          
+          // Jukebox events
+          window.addEventListener('set-username', (e: any) => this.handleSetUsername(e.detail.username));
+          window.addEventListener('change-user', () => this.handleChangeUser());
+          window.addEventListener('add-to-queue', (e: any) => this.handleAddToQueue(e.detail));
+          window.addEventListener('remove-from-queue', (e: any) => this.handleRemoveFromQueue(e.detail.trackId));
 
     // Player state changes
     this.player.setOnStateChange((state) => {
@@ -82,18 +112,27 @@ export class SpotiLiteApp {
       }
     }
 
-    // If logged in, fetch profile for header UI
-    const token = await SpotifyAuthService.getAccessToken();
-    if (token) {
-      try {
-        const me = await SpotifyApiService.getProfile();
-        this.ui.setAuthUI(me);
-      } catch {
-        this.ui.setAuthUI(null);
-      }
-    } else {
-      this.ui.setAuthUI(null);
-    }
+              // If logged in, fetch profile for header UI
+          const token = await SpotifyAuthService.getAccessToken();
+          if (token) {
+            try {
+              const me = await SpotifyApiService.getProfile();
+              this.ui.setAuthUI(me);
+            } catch {
+              this.ui.setAuthUI(null);
+            }
+          } else {
+            this.ui.setAuthUI(null);
+          }
+
+          // Initialize jukebox UI
+          this.updateQueueDisplay();
+          this.updateNowPlaying();
+          
+          // Update user status if user is already set
+          if (this.userManager.isUserSet()) {
+            this.ui.updateUserStatus(this.userManager.getCurrentUser());
+          }
   }
 
   private async handleLogin(): Promise<void> {
@@ -205,6 +244,120 @@ export class SpotiLiteApp {
       }
     } catch (error: any) {
       console.error('Seek error:', error);
+    }
+  }
+
+  // Jukebox event handlers
+  private handleSetUsername(username: string): void {
+    this.userManager.setCurrentUser(username);
+    this.ui.updateUserStatus(username);
+    this.ui.setNotice(`Welcome, ${username}! You can now add songs to the queue.`);
+    
+    // Update queue display with current user info
+    this.updateQueueDisplay();
+  }
+
+  private handleChangeUser(): void {
+    this.userManager.clearCurrentUser();
+    this.ui.updateUserStatus(null);
+    this.ui.setNotice('User cleared. Please enter a new username to continue.');
+  }
+
+  private handleAddToQueue(detail: any): void {
+    if (!this.userManager.isUserSet()) {
+      this.ui.setNotice('Please enter your username first before adding songs to the queue.');
+      return;
+    }
+
+    const username = this.userManager.getCurrentUser()!;
+    const result = this.queueManager.addToQueue(detail.track, username);
+    
+    if (result.success) {
+      this.ui.setNotice(result.message);
+      this.updateQueueDisplay();
+      this.updateNowPlaying();
+    } else {
+      this.ui.setNotice(result.message);
+    }
+  }
+
+  private handleRemoveFromQueue(trackId: string): void {
+    if (!this.userManager.isUserSet()) {
+      this.ui.setNotice('Please enter your username first.');
+      return;
+    }
+
+    const username = this.userManager.getCurrentUser()!;
+    const result = this.queueManager.removeFromQueue(trackId, username);
+    
+    if (result.success) {
+      this.ui.setNotice(result.message);
+      this.updateQueueDisplay();
+      this.updateNowPlaying();
+    } else {
+      this.ui.setNotice(result.message);
+    }
+  }
+
+  // Update queue display
+  private updateQueueDisplay(): void {
+    const queue = this.queueManager.getQueueWithTimes();
+    this.ui.updateQueueDisplay(queue);
+  }
+
+  // Update now playing display
+  private updateNowPlaying(): void {
+    const currentTrack = this.queueManager.getCurrentTrack();
+    this.ui.updateNowPlaying(currentTrack);
+  }
+
+  // Volume control handlers
+  private handleVolumeChange(e: Event): void {
+    const target = e.target as HTMLInputElement;
+    const volume = parseInt(target.value);
+    
+    // Update volume display
+    const volumeLevel = document.getElementById('volumeLevel');
+    if (volumeLevel) {
+      volumeLevel.textContent = volume + '%';
+    }
+
+    // Update mute button state
+    const muteBtn = document.getElementById('muteBtn');
+    if (muteBtn) {
+      if (volume === 0) {
+        muteBtn.classList.add('muted');
+        muteBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>';
+      } else {
+        muteBtn.classList.remove('muted');
+        muteBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>';
+      }
+    }
+
+    // Store volume preference
+    localStorage.setItem('jukebox_volume', volume.toString());
+    
+    // Note: Actual volume control would require Spotify Web Playback SDK volume control
+    // For now, this just manages the UI state
+    this.ui.setNotice(`Volume set to ${volume}%`);
+  }
+
+  private handleMuteToggle(): void {
+    const volumeSlider = document.getElementById('volumeSlider') as HTMLInputElement;
+    const muteBtn = document.getElementById('muteBtn');
+    
+    if (!volumeSlider || !muteBtn) return;
+
+    if (muteBtn.classList.contains('muted')) {
+      // Unmute - restore previous volume
+      const previousVolume = localStorage.getItem('jukebox_volume') || '50';
+      volumeSlider.value = previousVolume;
+      this.handleVolumeChange({ target: volumeSlider } as Event);
+    } else {
+      // Mute - store current volume and set to 0
+      localStorage.setItem('jukebox_volume', volumeSlider.value);
+      volumeSlider.value = '0';
+      this.handleVolumeChange({ target: volumeSlider } as Event);
     }
   }
 }
