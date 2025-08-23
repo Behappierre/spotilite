@@ -31,11 +31,203 @@
     .wrap { max-width: 980px; margin: 0 auto; padding: 28px; }
     
     header { 
-      display:flex; 
-      align-items:center; 
-      justify-content:space-between; 
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
       gap: 16px; 
       margin-bottom: 24px; 
+    }
+    
+    .header-center {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+    }
+    
+    .help-btn {
+      background: linear-gradient(180deg, #6366f1, #4f46e5);
+      color: white;
+      border: 0;
+      padding: 10px 16px;
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+    }
+    
+    .help-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+    }
+    
+    .help-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+    
+    /* Help Modal Styles */
+    .help-modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(8px);
+    }
+    
+    .help-modal-content {
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      margin: 5% auto;
+      padding: 0;
+      border-radius: 20px;
+      width: 90%;
+      max-width: 800px;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .help-modal-header {
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      color: white;
+      padding: 24px 32px;
+      border-radius: 20px 20px 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    
+    .help-modal-header h2 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 700;
+    }
+    
+    .help-close-btn {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: white;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+      padding: 8px 16px;
+      border-radius: 12px;
+      transition: all 0.2s ease;
+      line-height: 1;
+    }
+    
+    .help-close-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(1.1);
+    }
+    
+    .help-modal-body {
+      padding: 32px;
+      color: #e7eef7;
+      line-height: 1.6;
+    }
+    
+    .help-section {
+      margin-bottom: 32px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .help-section:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+    }
+    
+    .help-section h3 {
+      color: #cfe2f2;
+      font-size: 20px;
+      font-weight: 600;
+      margin: 0 0 16px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .help-section p {
+      margin: 0 0 16px 0;
+      color: #b9c9da;
+    }
+    
+    .help-section ul, .help-section ol {
+      margin: 0 0 16px 0;
+      padding-left: 24px;
+      color: #b9c9da;
+    }
+    
+    .help-section li {
+      margin-bottom: 8px;
+    }
+    
+    .help-section strong {
+      color: #e7eef7;
+      font-weight: 600;
+    }
+    
+    .help-modal-footer {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 24px 32px;
+      border-radius: 0 0 20px 20px;
+      text-align: center;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .help-modal-footer p {
+      margin: 0;
+      color: #8fa0b3;
+      font-size: 14px;
+    }
+    
+    .help-modal-footer a {
+      color: #6366f1;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    
+    .help-modal-footer a:hover {
+      text-decoration: underline;
+    }
+    
+    /* Responsive Help Modal */
+    @media (max-width: 768px) {
+      .help-modal-content {
+        margin: 10% auto;
+        width: 95%;
+        max-height: 85vh;
+      }
+      
+      .help-modal-header {
+        padding: 20px 24px;
+      }
+      
+      .help-modal-header h2 {
+        font-size: 20px;
+      }
+      
+      .help-modal-body {
+        padding: 24px;
+      }
+      
+      .help-section h3 {
+        font-size: 18px;
+      }
     }
     
     .logo { 
@@ -1005,6 +1197,14 @@
         <span class="dot"></span>
         <span class="title">SpotiLite</span>
       </div>
+      <div class="header-center">
+        <button class="help-btn" id="helpBtn" title="Help & Features">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
+          </svg>
+          Help
+        </button>
+      </div>
       <div class="right" id="authArea">
         <!-- Filled by TypeScript -->
       </div>
@@ -1144,6 +1344,129 @@
           <input type="range" id="volumeSlider" class="volume-slider" min="0" max="100" value="50" title="Volume">
           <div class="volume-level" id="volumeLevel">50%</div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Help Modal -->
+  <div id="helpModal" class="help-modal">
+    <div class="help-modal-content">
+      <div class="help-modal-header">
+        <h2>🎵 SpotiLite Help & Features</h2>
+        <button class="help-close-btn" id="helpCloseBtn">&times;</button>
+      </div>
+      
+      <div class="help-modal-body">
+        <div class="help-section">
+          <h3>🔐 Getting Started</h3>
+          <p><strong>First Time Setup:</strong></p>
+          <ol>
+            <li>Click "Log in with Spotify" in the top right</li>
+            <li>Authorize SpotiLite to access your Spotify account</li>
+            <li>You'll be redirected back and can start using the app</li>
+          </ol>
+          <p><strong>Note:</strong> You need a Spotify Premium account for full playback functionality.</p>
+        </div>
+        
+        <div class="help-section">
+          <h3>🔍 Search & Discovery</h3>
+          <p><strong>Search Types:</strong></p>
+          <ul>
+            <li><strong>Tracks:</strong> Individual songs with play buttons</li>
+            <li><strong>Artists:</strong> View top tracks and artist information</li>
+            <li><strong>Albums:</strong> Browse complete album tracklists</li>
+            <li><strong>Playlists:</strong> Explore curated music collections</li>
+          </ul>
+          <p><strong>Drill-Down Feature:</strong> Click "View Tracks" on any playlist, album, or artist to see individual songs and add them to your queue.</p>
+        </div>
+        
+        <div class="help-section">
+          <h3>🎪 Jukebox Mode</h3>
+          <p><strong>Setting Up:</strong></p>
+          <ol>
+            <li>Enter your username in the "Who's Playing?" section</li>
+            <li>Search for music and click "Add to Queue" on tracks</li>
+            <li>Your songs will appear in the queue with your name</li>
+          </ol>
+          <p><strong>Queue Management:</strong></p>
+          <ul>
+            <li>Each user can add up to 3 songs to the queue</li>
+            <li>Queue persists between page refreshes</li>
+            <li>Remove your own songs with the trash icon</li>
+            <li>Change users anytime with the "Change User" button</li>
+          </ul>
+        </div>
+        
+        <div class="help-section">
+          <h3>🎛️ Playback Controls</h3>
+          <p><strong>Main Player (Bottom):</strong></p>
+          <ul>
+            <li><strong>Play/Pause:</strong> Start or pause current track</li>
+            <li><strong>Next/Previous:</strong> Navigate through queue or search results</li>
+            <li><strong>Stop:</strong> Stop playback and clear current track</li>
+            <li><strong>Progress Bar:</strong> Click to seek through the track</li>
+            <li><strong>Volume:</strong> Master volume control with mute toggle</li>
+          </ul>
+          <p><strong>Jukebox Controls (Right Panel):</strong></p>
+          <ul>
+            <li>Dedicated controls for jukebox operation</li>
+            <li>Volume slider that syncs with main player</li>
+            <li>Touch-optimized for tablet use</li>
+          </ul>
+        </div>
+        
+        <div class="help-section">
+          <h3>📱 User Experience Tips</h3>
+          <p><strong>Search Bar:</strong></p>
+          <ul>
+            <li>Sticky search bar stays visible while scrolling</li>
+            <li>Use the magnifying glass icon to search</li>
+            <li>Select search types (tracks, artists, albums, playlists)</li>
+          </ul>
+          <p><strong>Navigation:</strong></p>
+          <ul>
+            <li>Use "Back to Search" to return from drill-down views</li>
+            <li>Queue automatically plays next song when current track ends</li>
+            <li>Volume preferences are saved between sessions</li>
+          </ul>
+        </div>
+        
+        <div class="help-section">
+          <h3>🎯 Example Use Cases</h3>
+          <p><strong>Party Mode:</strong></p>
+          <ul>
+            <li>Multiple friends can add their favorite songs</li>
+            <li>Queue automatically manages song order</li>
+            <li>Everyone gets a fair chance to hear their music</li>
+          </ul>
+          <p><strong>Personal Discovery:</strong></p>
+          <ul>
+            <li>Search for new artists and explore their albums</li>
+            <li>Create playlists and browse track by track</li>
+            <li>Build your own music collection</li>
+          </ul>
+          <p><strong>Tablet Jukebox:</strong></p>
+          <ul>
+            <li>Perfect for restaurants, bars, or home use</li>
+            <li>Touch-friendly interface for easy operation</li>
+            <li>Large, clear display of current track and queue</li>
+          </ul>
+        </div>
+        
+        <div class="help-section">
+          <h3>🔧 Troubleshooting</h3>
+          <p><strong>Common Issues:</strong></p>
+          <ul>
+            <li><strong>Playback not working:</strong> Ensure you have Spotify Premium</li>
+            <li><strong>Volume controls not responding:</strong> Both sliders should sync automatically</li>
+            <li><strong>Search errors:</strong> Check your internet connection</li>
+            <li><strong>Authentication issues:</strong> Try logging out and back in</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="help-modal-footer">
+        <p>Need more help? Check out the <a href="https://github.com/yourusername/spotilite" target="_blank">GitHub repository</a> or contact support.</p>
       </div>
     </div>
   </div>

@@ -24,6 +24,27 @@ export class SpotiLiteApp {
   }
 
   private setupEventListeners(): void {
+    // Help modal
+    const helpBtn = document.getElementById('helpBtn');
+    if (helpBtn) {
+      helpBtn.onclick = () => this.showHelpModal();
+    }
+    
+    const helpCloseBtn = document.getElementById('helpCloseBtn');
+    if (helpCloseBtn) {
+      helpCloseBtn.onclick = () => this.hideHelpModal();
+    }
+    
+    // Close modal when clicking outside
+    const helpModal = document.getElementById('helpModal');
+    if (helpModal) {
+      helpModal.onclick = (e) => {
+        if (e.target === helpModal) {
+          this.hideHelpModal();
+        }
+      };
+    }
+    
     // Search form
     const form = document.getElementById("searchForm") as HTMLFormElement;
     if (form) {
@@ -612,6 +633,23 @@ export class SpotiLiteApp {
       } else {
         jukeboxMuteBtn.classList.remove('muted');
       }
+    }
+  }
+  
+  // Help modal methods
+  private showHelpModal(): void {
+    const helpModal = document.getElementById('helpModal');
+    if (helpModal) {
+      helpModal.style.display = 'block';
+      document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    }
+  }
+  
+  private hideHelpModal(): void {
+    const helpModal = document.getElementById('helpModal');
+    if (helpModal) {
+      helpModal.style.display = 'none';
+      document.body.style.overflow = ''; // Restore scrolling
     }
   }
 }
